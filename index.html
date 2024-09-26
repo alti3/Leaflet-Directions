@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Route Following Roads with Leaflet</title>
+  <meta charset="utf-8" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Ensure the HTML and body take up the full height */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /* Make the map div fill the entire viewport */
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    /* Container for input boxes and button */
+    .controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 1000;
+      width: 250px; /* Adjust the width as desired */
+    }
+    .controls input {
+      margin-bottom: 8px;
+    }
+  </style>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div class="controls">
+    <input
+      type="text"
+      id="start-coordinates"
+      placeholder="Start Coordinates (lat,lng)"
+      class="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <input
+      type="text"
+      id="end-coordinates"
+      placeholder="End Coordinates (lat,lng)"
+      class="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <button
+      id="build-directions"
+      class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      Build Directions
+    </button>
+  </div>
+
+  <script>
+    // Coordinates for initial view
+    var start = [32.86644637480873, 13.096710348863887]; // Starting point
+    var end = [32.80249920466434, 13.31208998093917]; // Ending point
+
+    // Initialize the map
+    var map = L.map('map').setView(start, 7);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    // Initialize start and end markers
+    var startMarker = L.marker(start).addTo(map).bindPopup('Starting Point').openPopup();
+    var endMarker = L.marker(end).addTo(map).bindPopup('Ending Point');
+
+    // Your OpenRouteService API key
+    var apiKey = '5b3ce3597851110001cf624877553ef3b51c439ea1703dad52063a47';
+
+    // Variable to hold the current route polyline
+    var currentRoute = null;
+
+    // Function to fetch and display route
+    function fetchRoute(startCoords, endCoords) {
+      // Construct the API request URL
+      var url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+
+          console.log(data);
+          // Extract the route coordinates
+          var routeCoords = data.features[0].geometry.coordinates;
+
+          // Convert coordinates to LatLng array
+          var latLngRoute = routeCoords.map(function(coord) {
+            return [coord[1], coord[0]];
+          });
+
+          // Clear existing route if any
+          if (currentRoute) {
+            map.removeLayer(currentRoute);
+          }
+
+          // Add the new route as a polyline
+          currentRoute = L.polyline(latLngRoute, {
+            color: 'blue',
+            weight: 5
+          }).addTo(map);
+
+          // Fit the map to the route with adjusted bounds
+          var bounds = currentRoute.getBounds();
+          var adjustedBounds = L.latLngBounds(
+            L.latLng(bounds.getSouthWest().lat - 0.003, bounds.getSouthWest().lng - 0.003),
+            L.latLng(bounds.getNorthEast().lat + 0.003, bounds.getNorthEast().lng + 0.003)
+          );
+          map.fitBounds(adjustedBounds);
+        })
+        .catch(error => {
+          console.error('Error fetching route data:', error);
+        });
+    }
+
+    // Function to update markers
+    function updateMarkers(newStart, newEnd) {
+      // Remove old markers
+      if (startMarker) {
+        map.removeLayer(startMarker);
+      }
+      if (endMarker) {
+        map.removeLayer(endMarker);
+      }
+
+      // Add new markers
+      startMarker = L.marker(newStart).addTo(map).bindPopup('Starting Point').openPopup();
+      endMarker = L.marker(newEnd).addTo(map).bindPopup('Ending Point');
+    }
+
+    // Event listener for the build directions button
+    document.getElementById('build-directions').addEventListener('click', function() {
+      var startInput = document.getElementById('start-coordinates').value;
+      var endInput = document.getElementById('end-coordinates').value;
+
+      // Parse the input coordinates
+      var startParts = startInput.split(',').map(Number);
+      var endParts = endInput.split(',').map(Number);
+
+      if (startParts.length === 2 && endParts.length === 2 &&
+          !isNaN(startParts[0]) && !isNaN(startParts[1]) &&
+          !isNaN(endParts[0]) && !isNaN(endParts[1])) {
+        var newStart = [startParts[0], startParts[1]];
+        var newEnd = [endParts[0], endParts[1]];
+
+        // Update markers
+        updateMarkers(newStart, newEnd);
+
+        // Fetch and display the new route
+        fetchRoute(newStart, newEnd);
+      } else {
+        alert('Please enter valid coordinates in the format lat,lng');
+      }
+    });
+  </script>
+</body>
+</html>
