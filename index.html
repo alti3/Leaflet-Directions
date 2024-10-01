@@ -1,74 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
   <title>Route Following Roads with Leaflet</title>
   <meta charset="utf-8" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@latest/dist/leaflet.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            border: "hsl(var(--border))",
+            input: "hsl(var(--input))",
+            ring: "hsl(var(--ring))",
+            background: "hsl(var(--background))",
+            foreground: "hsl(var(--foreground))",
+            primary: {
+              DEFAULT: "hsl(var(--primary))",
+              foreground: "hsl(var(--primary-foreground))",
+            },
+            secondary: {
+              DEFAULT: "hsl(var(--secondary))",
+              foreground: "hsl(var(--secondary-foreground))",
+            },
+            destructive: {
+              DEFAULT: "hsl(var(--destructive))",
+              foreground: "hsl(var(--destructive-foreground))",
+            },
+            muted: {
+              DEFAULT: "hsl(var(--muted))",
+              foreground: "hsl(var(--muted-foreground))",
+            },
+            accent: {
+              DEFAULT: "hsl(var(--accent))",
+              foreground: "hsl(var(--accent-foreground))",
+            },
+            popover: {
+              DEFAULT: "hsl(var(--popover))",
+              foreground: "hsl(var(--popover-foreground))",
+            },
+            card: {
+              DEFAULT: "hsl(var(--card))",
+              foreground: "hsl(var(--card-foreground))",
+            },
+          },
+          borderRadius: {
+            lg: "var(--radius)",
+            md: "calc(var(--radius) - 2px)",
+            sm: "calc(var(--radius) - 4px)",
+          },
+        },
+      },
+    }
+  </script>
   <style>
-    /* Ensure the HTML and body take up the full height */
-    html, body {
+    @layer base {
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 222.2 47.4% 11.2%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 222.2 84% 4.9%;
+        --radius: 0.5rem;
+      }
+
+      .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 210 40% 98%;
+        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 212.7 26.8% 83.9%;
+      }
+    }
+  </style>
+  <style>
+    html,
+    body {
       height: 100%;
       margin: 0;
       padding: 0;
     }
-    /* Make the map div fill the entire viewport */
+
     #map {
       height: 100%;
       width: 100%;
     }
-    /* Container for input boxes and button */
-    .controls {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      z-index: 1000;
-      width: 250px; /* Adjust the width as desired */
-    }
-    .controls input {
-      margin-bottom: 8px;
-    }
   </style>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js"></script>
 </head>
-<body>
+
+<body class="bg-background text-foreground">
   <div id="map"></div>
 
-  <div class="controls">
-    <input
-      type="text"
-      id="start-coordinates"
-      placeholder="Start Coordinates (lat,lng)"
-      class="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-    <input
-      type="text"
-      id="end-coordinates"
-      placeholder="End Coordinates (lat,lng)"
-      class="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-    <button
-      id="build-directions"
-      class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    >
-      Build Directions
-    </button>
+  <div class="fixed top-4 right-4 w-80 p-4 bg-card/85 rounded-lg shadow-lg z-[1000]">
+    <div class="space-y-4">
+      <input type="text" id="start-coordinates" placeholder="Start Coordinates (lat,lng)"
+        class="w-full px-3 py-2 bg-background text-foreground border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring" />
+      <input type="text" id="end-coordinates" placeholder="End Coordinates (lat,lng)"
+        class="w-full px-3 py-2 bg-background text-foreground border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring" />
+      <button id="build-directions"
+        class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        Build Directions
+      </button>
+    </div>
   </div>
 
   <script>
     // Coordinates for initial view
-    var start = [32.86644637480873, 13.096710348863887]; // Starting point
-    var end = [32.80249920466434, 13.31208998093917]; // Ending point
+    var start = [32.86166, 13.08340]; // Starting point
+    var end = [32.80462, 13.42728]; // Ending point
 
     // Initialize the map
-    var map = L.map('map').setView(start, 7);
+    var map = L.map('map', {
+      zoomControl: false  // Disable default zoom control
+    }).setView(start, 7);
 
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -99,7 +175,7 @@
           var routeCoords = data.features[0].geometry.coordinates;
 
           // Convert coordinates to LatLng array
-          var latLngRoute = routeCoords.map(function(coord) {
+          var latLngRoute = routeCoords.map(function (coord) {
             return [coord[1], coord[0]];
           });
 
@@ -143,7 +219,7 @@
     }
 
     // Event listener for the build directions button
-    document.getElementById('build-directions').addEventListener('click', function() {
+    document.getElementById('build-directions').addEventListener('click', function () {
       var startInput = document.getElementById('start-coordinates').value;
       var endInput = document.getElementById('end-coordinates').value;
 
@@ -152,8 +228,8 @@
       var endParts = endInput.split(',').map(Number);
 
       if (startParts.length === 2 && endParts.length === 2 &&
-          !isNaN(startParts[0]) && !isNaN(startParts[1]) &&
-          !isNaN(endParts[0]) && !isNaN(endParts[1])) {
+        !isNaN(startParts[0]) && !isNaN(startParts[1]) &&
+        !isNaN(endParts[0]) && !isNaN(endParts[1])) {
         var newStart = [startParts[0], startParts[1]];
         var newEnd = [endParts[0], endParts[1]];
 
@@ -166,6 +242,10 @@
         alert('Please enter valid coordinates in the format lat,lng');
       }
     });
+
+    // Call fetchRoute with default coordinates when the page loads
+    fetchRoute(start, end);
   </script>
 </body>
+
 </html>
