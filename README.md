@@ -9,8 +9,11 @@ Leaflet Directions is a web application that allows users to visualize and calcu
 - Interactive map display using Leaflet
 - Input fields for start and end coordinates
 - Route calculation and display using OpenRouteService API
+- Copy route GeoJSON to clipboard (try pasting it into https://geojson.io/)
 - Responsive design with Tailwind CSS
 - Dark mode support
+
+![alt text](image.png)
 
 ## Technologies and Packages Used
 
