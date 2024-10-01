@@ -133,6 +133,12 @@
         class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
         Build Directions
       </button>
+      <hr class="border-t border-border" />
+      <p id="route-distance" class="text-center text-sm"></p>
+      <button id="copy-geojson"
+        class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+        Copy Route GeoJSON
+      </button>
     </div>
   </div>
 
@@ -161,6 +167,9 @@
     // Variable to hold the current route polyline
     var currentRoute = null;
 
+    // Variable to store the current route GeoJSON
+    var currentRouteGeoJSON = null;
+
     // Function to fetch and display route
     function fetchRoute(startCoords, endCoords) {
       // Construct the API request URL
@@ -169,10 +178,12 @@
       fetch(url)
         .then(response => response.json())
         .then(data => {
-
           console.log(data);
           // Extract the route coordinates
           var routeCoords = data.features[0].geometry.coordinates;
+
+          // Store the current route GeoJSON
+          currentRouteGeoJSON = data.features[0].geometry;
 
           // Convert coordinates to LatLng array
           var latLngRoute = routeCoords.map(function (coord) {
@@ -197,6 +208,10 @@
             L.latLng(bounds.getNorthEast().lat + 0.003, bounds.getNorthEast().lng + 0.003)
           );
           map.fitBounds(adjustedBounds);
+
+          // Update route distance
+          var distanceKm = (data.features[0].properties.summary.distance / 1000).toFixed(2);
+          document.getElementById('route-distance').textContent = `Route Distance: ${distanceKm} km`;
         })
         .catch(error => {
           console.error('Error fetching route data:', error);
@@ -240,6 +255,21 @@
         fetchRoute(newStart, newEnd);
       } else {
         alert('Please enter valid coordinates in the format lat,lng');
+      }
+    });
+
+    // Event listener for the copy GeoJSON button
+    document.getElementById('copy-geojson').addEventListener('click', function () {
+      if (currentRouteGeoJSON) {
+        navigator.clipboard.writeText(JSON.stringify(currentRouteGeoJSON))
+          .then(() => {
+            alert('Route GeoJSON copied to clipboard!');
+          })
+          .catch(err => {
+            console.error('Failed to copy GeoJSON: ', err);
+          });
+      } else {
+        alert('No route available to copy.');
       }
     });
 
